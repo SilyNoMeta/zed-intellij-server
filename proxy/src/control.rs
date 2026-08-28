@@ -84,6 +84,9 @@ fn handle_request(shared: &Arc<Shared>, expected_token: &str, line: &str) -> Val
     }
     let command = request.get("command").and_then(Value::as_str).unwrap_or("");
     let arguments = request.get("arguments").cloned().unwrap_or(Value::Array(vec![]));
+    if command == CLEAR_CACHES_COMMAND {
+        return handle_clear_caches(shared, id);
+    }
     match call_server(
         shared,
         "workspace/executeCommand",
@@ -92,6 +95,28 @@ fn handle_request(shared: &Arc<Shared>, expected_token: &str, line: &str) -> Val
         Ok(result) => json!({"id": id, "result": result}),
         Err(error) => json!({"id": id, "error": error}),
     }
+}
+
+/// `__clear_caches_and_restart`: asks the backend to shut down; once it has
+/// exited (so its index files are released), the proxy deletes the index and
+/// exits with a crash code so the host restarts everything fresh.
+pub const CLEAR_CACHES_COMMAND: &str = "__clear_caches_and_restart";
+
+fn handle_clear_caches(shared: &Arc<Shared>, id: Value) -> Value {
+    if shared.index_dir.lock().unwrap().is_none() {
+        return json!({"id": id, "error": "server index directory unknown (not initialized?)"});
+    }
+    shared
+        .cache_clear_requested
+        .store(true, std::sync::atomic::Ordering::SeqCst);
+    let shared = Arc::clone(shared);
+    std::thread::spawn(move || {
+        // Best effort: if the shutdown exchange fails, the next server exit
+        // still triggers the cache clear (the flag is latched).
+        let _ = call_server(&shared, "shutdown", Value::Null);
+        crate::to_server(&shared, b"{\"jsonrpc\":\"2.0\",\"method\":\"exit\"}");
+    });
+    json!({"id": id, "result": "server stopping; index will be deleted and the server restarted"})
 }
 
 fn random_token() -> String {

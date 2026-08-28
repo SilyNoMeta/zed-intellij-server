@@ -18,6 +18,8 @@ editor, plus a minimal Gradle project to run them against.
   (`jetbrains/licensing/state/get`) and runs `discovery/autoActivate`,
   without the `licensingUi` capability. Use it to check whether a license
   (EAP, env var, or discovered) is in effect. See "Licensing" in the README.
+- `clear_caches.py` — asks the running proxy to wipe the backend index and
+  restart everything. See "Troubleshooting" in the README.
 - `test-project/` — minimal Gradle + Java project used by the tests.
 
 ## Running

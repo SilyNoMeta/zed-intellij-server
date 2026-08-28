@@ -69,6 +69,25 @@ Zed ──stdio──> this extension (WASM) ──spawns──> ij-zed-proxy �
 Project import and SDK selection use `lsp.intellij-server.initialization_options`,
 forwarded to the server as-is (`defaultSdk`, `projects`, `buildTools`,
 `disableRocksDBWriteAheadLog` — see the official extension's documentation).
+Changing `initialization_options` takes effect on the next server start
+(restart the language server after editing).
+
+Other keys the backend understands, passed through the same way:
+
+```jsonc
+// lsp.intellij-server.settings — inlay hints (server-side rendering)
+{
+  "jetbrains.kotlin.hints.parameters": true,
+  "jetbrains.java.hints.types.local variable": true
+}
+
+// lsp.intellij-server.initialization_options — per-folder Bazel settings
+{
+  "bazelSettings": {
+    "file:///abs/path/to/workspace": { "projectview": ".bazelproject", "build": true }
+  }
+}
+```
 
 ## Debugging
 
@@ -95,6 +114,10 @@ Requires the proxy (see `proxy_path`). Example `.zed/debug.json`:
 Classpath (JPMS included), working directory and `java` executable are resolved from
 the IntelliJ project model at launch. **Build your classes before launching** — the
 backend does not compile before running (e.g. `gradle classes`, or a Zed task).
+
+To debug a JVM started elsewhere (tests, a server, a Gradle run), start it with
+`-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005` and use the
+attach configuration above.
 
 ## Licensing
 
@@ -142,6 +165,23 @@ with the EAP terms), three channels:
    per-project in this extension (per-worktree `--system-path`), so you would
    need to re-activate for each project. Prefer channel 1.
 
+## Troubleshooting
+
+**Clear caches and restart.** When the index gets corrupted (stale or missing
+symbols, odd diagnostics after a crash), ask the running proxy to wipe the
+backend index and restart everything:
+
+```sh
+python3 tests/clear_caches.py \
+  "$HOME/Library/Application Support/Zed/extensions/work/intellij-server/system-path/<hash>"
+```
+
+There is one `<hash>` directory per project; each holds the proxy session file.
+The backend shuts down, the proxy deletes the index and exits so Zed restarts
+everything with a fresh index (re-indexing takes a while on large projects).
+Manual alternative: stop the language server, delete that `<hash>` directory,
+restart the server.
+
 ## Known limitations
 
 - The backend preview **expires 30 days** after its build date (exit code 7): update
@@ -151,6 +191,11 @@ with the EAP terms), three channels:
   file in the editor re-imports the project. Restart the language server otherwise.
 - The license-activation UI of the official extension does not exist in Zed;
   see Licensing above for the headless channels.
+- File templates are not applied when creating new files (Zed has no
+  file-creation hook for extensions), and the workspace-structure JSON export
+  is unavailable (no access to the command palette from extensions).
+- Debug scenario generation from main classes (DAP locators) is not wired yet;
+  write `debug.json` entries by hand.
 
 ## Repository layout
 

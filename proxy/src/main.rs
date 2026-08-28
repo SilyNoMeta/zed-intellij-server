@@ -57,6 +57,13 @@ struct Shared {
     /// one-shot license discovery (mirrors the official client's startup).
     initialize_id: Mutex<Option<String>>,
     discovery_done: std::sync::atomic::AtomicBool,
+    /// Index directory reported by the server in the initialize response
+    /// (`capabilities.experimental.indexDir`), used by the cache-clear
+    /// control command.
+    index_dir: Mutex<Option<PathBuf>>,
+    /// Set by the cache-clear control command: once the server exits, delete
+    /// the index and exit with a crash code so the host restarts us.
+    cache_clear_requested: std::sync::atomic::AtomicBool,
     cache_root: PathBuf,
     log: Mutex<Box<dyn Write + Send>>,
 }
@@ -121,6 +128,8 @@ fn run_lsp(log_path: Option<String>, server_cmd: Vec<String>) {
         init_options: Mutex::new(Value::Null),
         initialize_id: Mutex::new(None),
         discovery_done: std::sync::atomic::AtomicBool::new(false),
+        index_dir: Mutex::new(None),
+        cache_clear_requested: std::sync::atomic::AtomicBool::new(false),
         cache_root,
         log: Mutex::new(log),
     });
@@ -150,11 +159,29 @@ fn run_lsp(log_path: Option<String>, server_cmd: Vec<String>) {
         });
     }
 
-    // Child exit → relay exit code.
+    // Child exit → relay exit code (or clear caches and crash for a restart).
     {
         let shared = Arc::clone(&shared);
         std::thread::spawn(move || {
             let status = child.wait();
+            if shared
+                .cache_clear_requested
+                .swap(false, Ordering::SeqCst)
+            {
+                let dir = shared.index_dir.lock().unwrap().clone();
+                match dir {
+                    Some(dir) => {
+                        delete_dir_with_retries(&shared, &dir);
+                        logln(
+                            &shared,
+                            &format!("caches cleared ({}), restarting", dir.display()),
+                        );
+                    }
+                    None => logln(&shared, "cache clear requested but indexDir unknown"),
+                }
+                logln(&shared, "exiting with code 1 so the host restarts the server");
+                std::process::exit(1);
+            }
             let code = match &status {
                 Ok(s) => s.code().unwrap_or(1),
                 Err(_) => 1,
@@ -514,6 +541,11 @@ fn server_to_client(shared: &Arc<Shared>, work_tx: &Sender<(Value, Vec<u8>)>, bo
                 is_initialize_response = true;
             }
         }
+        if is_initialize_response {
+            if let Some(dir) = msg["result"]["capabilities"]["experimental"]["indexDir"].as_str() {
+                *shared.index_dir.lock().unwrap() = Some(PathBuf::from(dir));
+            }
+        }
         if is_initialize_response
             && !shared.discovery_done.swap(true, Ordering::SeqCst)
         {
@@ -761,4 +793,21 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
     haystack
         .windows(needle.len())
         .any(|window| window == needle)
+}
+
+/// `rm -rf` with retries, tolerating slow handle release (mirrors the
+/// official client's deleteIndexDir: 5 attempts, 200 ms apart).
+fn delete_dir_with_retries(shared: &Arc<Shared>, dir: &Path) {
+    for attempt in 1..=5 {
+        match std::fs::remove_dir_all(dir) {
+            Ok(()) => return,
+            Err(e) => {
+                logln(
+                    shared,
+                    &format!("delete {} (attempt {attempt}/5): {e}", dir.display()),
+                );
+                std::thread::sleep(Duration::from_millis(200));
+            }
+        }
+    }
 }
