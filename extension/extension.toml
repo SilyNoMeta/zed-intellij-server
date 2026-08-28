@@ -1,6 +1,6 @@
 id = "intellij-server"
 name = "Java & Kotlin (IntelliJ engine)"
-version = "0.1.0"
+version = "0.1.1"
 schema_version = 1
 authors = ["SilyNoMeta"]
 description = "IntelliJ-powered code engine for Java and Kotlin (JetBrains intellij-server backend). Not affiliated with or endorsed by JetBrains."
