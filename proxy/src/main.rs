@@ -602,15 +602,14 @@ fn materialize(shared: &Arc<Shared>, uri: &str) -> Option<String> {
         .map_err(|e| logln(shared, &format!("write {}: {e}", path.display())))
         .ok()?;
     // Read-only marker: Zed has no read-only documents; make accidental edits obvious.
-    let _ = std::fs::metadata(&path).map(|m| {
-        let mut perms = m.permissions();
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions()) {
             perms.set_mode(0o444);
             let _ = std::fs::set_permissions(&path, perms);
         }
-    });
+    }
     logln(shared, &format!("decompiled {uri} → {}", path.display()));
     Some(file_uri(&path))
 }

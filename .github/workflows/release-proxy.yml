@@ -53,7 +53,14 @@ jobs:
           bin="proxy/target/${{ matrix.target }}/release/ij-zed-proxy"
           [ -f "${bin}.exe" ] && bin="${bin}.exe"
           cp "$bin" "out/ij-zed-proxy-${{ matrix.suffix }}"
-          shasum -a 256 "out/ij-zed-proxy-${{ matrix.suffix }}" | awk '{print $1}' > "out/ij-zed-proxy-${{ matrix.suffix }}.sha256"
+          f="out/ij-zed-proxy-${{ matrix.suffix }}"
+          if command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "$f" | awk '{print $1}' > "$f.sha256"
+          elif command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$f" | awk '{print $1}' > "$f.sha256"
+          else
+            powershell -NoProfile -Command "(Get-FileHash '$f' -Algorithm SHA256).Hash.ToLower()" | tr -d '\r' > "$f.sha256"
+          fi
       - name: Upload to release
         shell: bash
         env:
