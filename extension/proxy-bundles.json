@@ -1,6 +1,16 @@
 {
-  "comment": "Pinned ij-zed-proxy binaries published alongside the extension on GitHub Releases. sha256 from dist/proxy/*.sha256 at release time. An entry missing for the current platform means: no proxy available (direct mode).",
+  "comment": "Pinned ij-zed-proxy binaries published alongside the extension on GitHub Releases. sha256 from the release assets at release time. An entry missing for the current platform means: no proxy available (direct mode).",
   "version": "0.1.0",
   "releaseBaseUrl": "https://github.com/SilyNoMeta/zed-intellij-server/releases/download/proxy-v0.1.0",
-  "platforms": {}
+  "platforms": {
+    "darwin-aarch64": {
+      "sha256": "dc0eb07d67ea02f8bc57c88ad030892b9caebd22c126cba43ac11829742ca5e5"
+    },
+    "linux-aarch64": {
+      "sha256": "e21354b2a98a56d81ff182f92c999cc7b58a6ce94562efdb8ebf2d1279b5fc5d"
+    },
+    "linux-x86_64": {
+      "sha256": "64a214fc8425f882dcc98c735d1fc519fb7ac89ffc5541431b2c8f2da7f475fb"
+    }
+  }
 }
