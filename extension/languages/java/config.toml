@@ -1,0 +1,18 @@
+name = "Java"
+grammar = "java"
+path_suffixes = ["java"]
+line_comments = ["// "]
+autoclose_before = ";:.,=}])>` \n\t\""
+brackets = [
+    { start = "{", end = "}", close = true, newline = true },
+    { start = "[", end = "]", close = true, newline = true },
+    { start = "(", end = ")", close = true, newline = false },
+    { start = "<", end = ">", close = false, newline = false },
+    { start = "\"", end = "\"", close = true, newline = false, not_in = ["string"] },
+    { start = "'", end = "'", close = true, newline = false, not_in = ["string"] },
+    { start = "/*", end = " */", close = true, newline = true, not_in = ["string", "comment"] },
+]
+collapsed_placeholder = " /* ... */ "
+block_comment = { start = "/*", prefix = "", end = "*/", tab_size = 2 }
+documentation_comment = { start = "/**", end = "*/", prefix = "* ", tab_size = 1 }
+debuggers = ["intellij-debugger"]

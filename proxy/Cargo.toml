@@ -1,0 +1,12 @@
+[package]
+name = "ij-zed-proxy"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "LSP proxy between Zed and the JetBrains intellij-server backend."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+arboard = "3"
+sha2 = "0.10"

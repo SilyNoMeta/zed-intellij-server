@@ -1,0 +1,40 @@
+name: backend-bump
+
+# Weekly check for a newer intellij-server backend (preview builds expire
+# after 30 days, so the pinned backend must be bumped regularly).
+on:
+  schedule:
+    - cron: "23 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Open VSX for a newer backend
+        id: bump
+        run: |
+          if scripts/check-backend-update.py --write; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            rc=$?
+            [ $rc -eq 2 ] && echo "changed=true" >> "$GITHUB_OUTPUT" || exit $rc
+          fi
+      - name: Smoke test instructions
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          echo "Download the new backend for your platform from the URL in"
+          echo "extension/server-bundles.json, then run:"
+          echo "  python3 tests/spike.py --server-dir <dir> --transcript /tmp/t.jsonl"
+      - name: Open a bump PR
+        if: steps.bump.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "Bump intellij-server backend"
+          body: "Automated weekly bump of the pinned backend (see scripts/check-backend-update.py). Run the smoke test in `tests/` before merging."
+          branch: bot/backend-bump
+          commit-message: "chore: bump pinned intellij-server backend"

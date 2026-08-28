@@ -1,0 +1,95 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["request", "mainClass"],
+      "properties": {
+        "request": {
+          "type": "string",
+          "enum": ["launch"],
+          "default": "launch"
+        },
+        "mainClass": {
+          "type": "string",
+          "description": "Fully-qualified name of the main class to run."
+        },
+        "file": {
+          "type": "string",
+          "description": "Path to the source file declaring the main class (disambiguates classes declared in several files). Supports ${file}."
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Program arguments passed to the main class.",
+          "default": []
+        },
+        "vmArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "JVM arguments.",
+          "default": []
+        },
+        "classPaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Override classpath. If empty, the language server resolves it from the project model."
+        },
+        "modulePaths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Override the JPMS module path (resolved from the project model if empty)."
+        },
+        "moduleName": {
+          "type": "string",
+          "description": "JPMS module owning the main class, launched as -m moduleName/mainClass."
+        },
+        "javaExec": {
+          "type": "string",
+          "description": "Path to the java executable. If empty, the project SDK is used."
+        },
+        "cwd": {
+          "type": "string",
+          "description": "Working directory for the launched process.",
+          "default": "${ZED_WORKTREE_ROOT}"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Extra environment variables for the launched process."
+        },
+        "console": {
+          "type": "string",
+          "enum": ["internalConsole", "integratedTerminal", "externalTerminal"],
+          "default": "integratedTerminal",
+          "description": "Where to run the program."
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["request", "port"],
+      "properties": {
+        "request": {
+          "type": "string",
+          "enum": ["attach"],
+          "default": "attach"
+        },
+        "hostName": {
+          "type": "string",
+          "description": "Host the JVM is listening on.",
+          "default": "localhost"
+        },
+        "port": {
+          "type": "number",
+          "description": "JDWP port the JVM is listening on.",
+          "default": 5005
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Connection timeout in milliseconds.",
+          "default": 30000
+        }
+      }
+    }
+  ]
+}

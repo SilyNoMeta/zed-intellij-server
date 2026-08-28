@@ -1,0 +1,21 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Build artifacts
+dist/
+extension/extension.wasm
+
+# Test runtime state
+tests/storage/
+tests/server/
+tests/proxy.log
+tests/dap-test-done
+tests/transcript*.jsonl
+tests/*.log
+tests/test-project/build/
+tests/test-project/.zed/
+tests/test-project/.gradle/
+
+# OS
+.DS_Store
