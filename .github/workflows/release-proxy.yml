@@ -22,37 +22,40 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-14, target: aarch64-apple-darwin, suffix: darwin-aarch64 }
-          - { os: macos-13, target: x86_64-apple-darwin, suffix: darwin-x86_64 }
-          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, suffix: linux-x86_64 }
-          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, suffix: linux-aarch64 }
-          - { os: windows-latest, target: x86_64-pc-windows-msvc, suffix: windows-x86_64 }
-          - { os: windows-latest, target: aarch64-pc-windows-msvc, suffix: windows-aarch64 }
+          - { os: macos-14, target: aarch64-apple-darwin, suffix: darwin-aarch64, toolchain: zig }
+          - { os: macos-13, target: x86_64-apple-darwin, suffix: darwin-x86_64, toolchain: zig }
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, suffix: linux-x86_64, toolchain: zig }
+          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, suffix: linux-aarch64, toolchain: zig }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, suffix: windows-x86_64, toolchain: msvc }
+          - { os: windows-latest, target: aarch64-pc-windows-msvc, suffix: windows-aarch64, toolchain: msvc }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: goto-bus-stop/setup-zig@v2
+        if: matrix.toolchain == 'zig'
       - uses: taiki-e/install-action@v2
+        if: matrix.toolchain == 'zig'
         with:
           tool: cargo-zigbuild
       - run: rustup target add ${{ matrix.target }}
-      - name: Build
+      - name: Build (zigbuild)
+        if: matrix.toolchain == 'zig'
         working-directory: proxy
         run: cargo zigbuild --release --target ${{ matrix.target }}
-      - name: Stage + checksum (unix)
-        if: runner.os != 'Windows'
+      - name: Build (msvc)
+        if: matrix.toolchain == 'msvc'
+        working-directory: proxy
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Stage + checksum
+        shell: bash
         run: |
           mkdir -p out
-          cp "proxy/target/${{ matrix.target }}/release/ij-zed-proxy" "out/ij-zed-proxy-${{ matrix.suffix }}"
+          bin="proxy/target/${{ matrix.target }}/release/ij-zed-proxy"
+          [ -f "${bin}.exe" ] && bin="${bin}.exe"
+          cp "$bin" "out/ij-zed-proxy-${{ matrix.suffix }}"
           shasum -a 256 "out/ij-zed-proxy-${{ matrix.suffix }}" | awk '{print $1}' > "out/ij-zed-proxy-${{ matrix.suffix }}.sha256"
-      - name: Stage + checksum (windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item "proxy/target/${{ matrix.target }}/release/ij-zed-proxy.exe" "out/ij-zed-proxy-${{ matrix.suffix }}"
-          (Get-FileHash "out/ij-zed-proxy-${{ matrix.suffix }}" -Algorithm SHA256).Hash.ToLower() | Out-File -NoNewline -Encoding ascii "out/ij-zed-proxy-${{ matrix.suffix }}.sha256"
       - name: Upload to release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
