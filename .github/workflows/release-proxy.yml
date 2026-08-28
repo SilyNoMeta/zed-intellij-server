@@ -56,4 +56,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
-        run: gh release upload "$TAG" out/* --clobber
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "ij-zed-proxy prebuilt binaries (see extension/proxy-bundles.json)."
+          gh release upload "$TAG" out/* --clobber
