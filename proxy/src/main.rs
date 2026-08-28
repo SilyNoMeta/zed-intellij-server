@@ -53,6 +53,10 @@ struct Shared {
     nav_requests: Mutex<HashMap<String, ()>>,
     next_proxy_id: AtomicU64,
     init_options: Mutex<Value>,
+    /// The client initialize request id, so the response can trigger the
+    /// one-shot license discovery (mirrors the official client's startup).
+    initialize_id: Mutex<Option<String>>,
+    discovery_done: std::sync::atomic::AtomicBool,
     cache_root: PathBuf,
     log: Mutex<Box<dyn Write + Send>>,
 }
@@ -115,6 +119,8 @@ fn run_lsp(log_path: Option<String>, server_cmd: Vec<String>) {
         nav_requests: Mutex::new(HashMap::new()),
         next_proxy_id: AtomicU64::new(1),
         init_options: Mutex::new(Value::Null),
+        initialize_id: Mutex::new(None),
+        discovery_done: std::sync::atomic::AtomicBool::new(false),
         cache_root,
         log: Mutex::new(log),
     });
@@ -411,6 +417,7 @@ fn client_to_server(shared: &Arc<Shared>, body: Vec<u8>) {
                 options["intellijExtensions"] = Value::Bool(true);
                 *shared.init_options.lock().unwrap() = options.clone();
             }
+            *shared.initialize_id.lock().unwrap() = msg.get("id").map(Value::to_string);
             to_server(shared, msg.to_string().as_bytes());
         }
         "textDocument/didSave" => {
@@ -497,6 +504,34 @@ fn server_to_client(shared: &Arc<Shared>, work_tx: &Sender<(Value, Vec<u8>)>, bo
             let _ = work_tx.send((msg.get("id").cloned().unwrap_or(Value::Null), body));
         } else {
             to_client(shared, &body);
+        }
+        // Initialize completed → one-shot license discovery, like the
+        // official client runs at every startup (headless, errors ignored).
+        let mut is_initialize_response = false;
+        if let Ok(mut guard) = shared.initialize_id.lock() {
+            if guard.as_deref() == Some(id_key.as_str()) {
+                guard.take();
+                is_initialize_response = true;
+            }
+        }
+        if is_initialize_response
+            && !shared.discovery_done.swap(true, Ordering::SeqCst)
+        {
+            let shared = Arc::clone(shared);
+            std::thread::spawn(move || {
+                let result = call_server(
+                    &shared,
+                    "jetbrains/licensing/discovery/autoActivate",
+                    Value::Null,
+                );
+                logln(
+                    &shared,
+                    &format!("license discovery: {}", match &result {
+                        Ok(v) => format!("{v}"),
+                        Err(e) => format!("failed: {e}"),
+                    }),
+                );
+            });
         }
         return;
     }
