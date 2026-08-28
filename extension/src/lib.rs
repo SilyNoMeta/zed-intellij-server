@@ -59,7 +59,7 @@ impl Extension for IntelliJServer {
         // itself (the acceptance above still gates the launch).
         let eula_hash = match eula::eula_hash(&eula_path) {
             Ok(hash) => Some(hash),
-            Err(e) if proxy.is_some() => None,
+            Err(_e) if proxy.is_some() => None,
             Err(e) => {
                 return Err(format!(
                     "{e}\nThe EULA is not readable from the extension sandbox. \
