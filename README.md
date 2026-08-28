@@ -96,16 +96,61 @@ Classpath (JPMS included), working directory and `java` executable are resolved 
 the IntelliJ project model at launch. **Build your classes before launching** — the
 backend does not compile before running (e.g. `gradle classes`, or a Zed task).
 
+## Licensing
+
+**Preview builds need no license.** The pinned backend ships with its own EAP
+license (`EAP User`), valid for 30 days from the build's release date. A paid
+license does **not** extend a preview build — expiry is baked into the build.
+Keep the extension updated instead; the weekly bump workflow tracks new builds.
+
+Check the current license state any time (works without any UI capability):
+
+```sh
+python3 tests/licensing_probe.py
+```
+
+If you have a JetBrains license and want it used anyway (1.0, or to stay square
+with the EAP terms), three channels:
+
+1. **`INTELLIJ_SERVER_LICENSE` environment variable (simplest, global).** The
+   backend honors it and it takes precedence over panel activation. Put your
+   JetBrains activation code in your Zed settings:
+
+   ```json
+   "lsp": {
+     "intellij-server": {
+       "settings": { "accept_jetbrains_eula": true },
+       "binary": {
+         "env": { "INTELLIJ_SERVER_LICENSE": "<your activation code>" }
+       }
+     }
+   }
+   ```
+
+   The value stays in plaintext in `settings.json`. Restart the language server
+   after editing.
+
+2. **Automatic license discovery.** After every `initialize`, the proxy runs
+   `jetbrains/licensing/discovery/autoActivate` — the same headless discovery
+   the official client runs at startup. On machines with a licensed JetBrains
+   IDE or Toolbox installation, the backend can pick up the existing license
+   by itself; the outcome is logged in the proxy log (`license discovery: …`).
+
+3. **Activation code over the protocol.** `jetbrains/licensing/activationCode/use`
+   is accepted by the backend without the `licensingUi` capability, but the
+   activated state persists in the server's config directory — which is
+   per-project in this extension (per-worktree `--system-path`), so you would
+   need to re-activate for each project. Prefer channel 1.
+
 ## Known limitations
 
 - The backend preview **expires 30 days** after its build date (exit code 7): update
-  the extension when this happens.
+  the extension when this happens (see Licensing above).
 - No run/debug CodeLens (Zed has no custom LSP command support yet); use `debug.json`.
 - External build-file edits (git checkout, CLI) are not auto-detected; saving a build
   file in the editor re-imports the project. Restart the language server otherwise.
-- The license-activation UI of the official extension does not exist in Zed. Preview
-  builds need no license; a `INTELLIJ_SERVER_LICENSE` environment variable is honored
-  by the backend if you have one.
+- The license-activation UI of the official extension does not exist in Zed;
+  see Licensing above for the headless channels.
 
 ## Repository layout
 

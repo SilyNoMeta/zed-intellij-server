@@ -14,6 +14,10 @@ editor, plus a minimal Gradle project to run them against.
   breakpoints, launch (with launch-config enrichment), stopped event, program
   output, clean termination. Needs a live LSP proxy instance (see below).
 - `control_probe.py` — manual probe for the proxy control channel.
+- `licensing_probe.py` — reports the backend licensing state
+  (`jetbrains/licensing/state/get`) and runs `discovery/autoActivate`,
+  without the `licensingUi` capability. Use it to check whether a license
+  (EAP, env var, or discovered) is in effect. See "Licensing" in the README.
 - `test-project/` — minimal Gradle + Java project used by the tests.
 
 ## Running
