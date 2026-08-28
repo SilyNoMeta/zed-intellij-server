@@ -19,3 +19,4 @@ tests/test-project/.gradle/
 
 # OS
 .DS_Store
+tests/test-project/workspace.json

@@ -166,6 +166,28 @@ To debug a JVM started elsewhere (tests, a server, a Gradle run), start it with
 `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005` and use the
 attach configuration above.
 
+## Control commands (maintenance & inspection)
+
+While a project server runs, the proxy exposes a localhost control channel
+(token-gated, one instance per project). The scripts in `tests/` wrap it;
+each resolves the right instance from the project root:
+
+| Script | What it does |
+|---|---|
+| `reload_workspace.py <root>` | Re-import the project model (`intellij/reloadWorkspace`). |
+| `clear_caches.py <system-path>` | Wipe the backend index and restart (see Troubleshooting). |
+| `license_state.py <root>` | Print the licensing state (source, validity, JBA, license server). |
+| `export_workspace.py <root>` | Write the IntelliJ project model to `<root>/workspace.json`. |
+| `print_classpath.py <root> <fqn-or-file>` | Print the exact resolved classpath (handy for terminal compiles). |
+
+The channel itself speaks newline-delimited JSON on `127.0.0.1` (session file:
+`…/system-path/<hash>/ij-zed-proxy.session.json`). Commands: any
+`workspace/executeCommand` (e.g. `decompile`, `exportWorkspace`,
+`intellij.java.resolve*`), `__lsp` (raw LSP passthrough, e.g.
+`jetbrains/licensing/state/get`), `__reload_workspace`,
+`__clear_caches_and_restart`. `tests/control_client.py` is a tiny shared
+client if you want to script your own.
+
 ## Licensing
 
 **Preview builds need no license.** The pinned backend ships with its own EAP

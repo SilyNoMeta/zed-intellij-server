@@ -6,20 +6,14 @@ Le <system-path> est celui du worktree (contient ij-zed-proxy.session.json) ;
 sous Zed il ressemble à :
   ~/Library/Application Support/Zed/extensions/work/intellij-server/system-path/<hash>
 """
-import json
-import socket
 import sys
 from pathlib import Path
 
-session = json.load(open(Path(sys.argv[1]) / "ij-zed-proxy.session.json"))
-with socket.create_connection(("127.0.0.1", session["port"]), timeout=15) as s:
-    f = s.makefile("rw")
-    f.write(json.dumps({
-        "id": 1,
-        "token": session["token"],
-        "command": "__clear_caches_and_restart",
-        "arguments": [],
-    }) + "\n")
-    f.flush()
-    s.settimeout(15)
-    print(f.readline().strip(), flush=True)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from control_client import send
+
+session = Path(sys.argv[1]) / "ij-zed-proxy.session.json"
+if not session.exists():
+    sys.exit(f"pas de session proxy dans {sys.argv[1]}")
+
+print(send(session, "__clear_caches_and_restart", []))

@@ -94,6 +94,19 @@ fn handle_request(shared: &Arc<Shared>, expected_token: &str, line: &str) -> Val
         crate::trigger_reload_workspace(Arc::clone(shared), "manual reload");
         return json!({"id": id, "result": "workspace reload requested"});
     }
+    if command == LSP_COMMAND {
+        // Raw LSP passthrough (e.g. jetbrains/licensing/state/get on the
+        // live instance). Localhost + token gated, same as executeCommand.
+        let method = request.get("method").and_then(Value::as_str).unwrap_or("");
+        if method.is_empty() {
+            return json!({"id": id, "error": "missing `method` for __lsp"});
+        }
+        let params = request.get("params").cloned().unwrap_or(Value::Null);
+        return match call_server(shared, method, params) {
+            Ok(result) => json!({"id": id, "result": result}),
+            Err(error) => json!({"id": id, "error": error}),
+        };
+    }
     match call_server(
         shared,
         "workspace/executeCommand",
@@ -112,6 +125,10 @@ pub const CLEAR_CACHES_COMMAND: &str = "__clear_caches_and_restart";
 /// `__reload_workspace`: re-imports the project model without restarting
 /// the server — the manual equivalent of IntelliJ's "Load Changes" button.
 pub const RELOAD_WORKSPACE_COMMAND: &str = "__reload_workspace";
+
+/// `__lsp`: raw LSP method passthrough to the backend, for maintenance and
+/// inspection commands that are not `workspace/executeCommand` (licensing…).
+pub const LSP_COMMAND: &str = "__lsp";
 
 fn handle_clear_caches(shared: &Arc<Shared>, id: Value) -> Value {
     if shared.index_dir.lock().unwrap().is_none() {

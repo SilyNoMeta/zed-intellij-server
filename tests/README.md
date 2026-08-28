@@ -14,15 +14,23 @@ editor, plus a minimal Gradle project to run them against.
   breakpoints, launch (with launch-config enrichment), stopped event, program
   output, clean termination. Needs a live LSP proxy instance (see below).
 - `control_probe.py` — manual probe for the proxy control channel.
+- `control_client.py` — tiny shared client for the control channel (session
+  resolution from the project root + command send), used by the scripts below.
 - `licensing_probe.py` — reports the backend licensing state
   (`jetbrains/licensing/state/get`) and runs `discovery/autoActivate`,
   without the `licensingUi` capability. Use it to check whether a license
   (EAP, env var, or discovered) is in effect. See "Licensing" in the README.
+- `license_state.py` — licensing state of the live instance via the control
+  channel (no new server needed). See "Control commands" in the README.
 - `clear_caches.py` — asks the running proxy to wipe the backend index and
   restart everything. See "Troubleshooting" in the README.
 - `reload_workspace.py` — triggers `intellij/reloadWorkspace` on the server
   instance of a given project (the manual "Load Changes" button).
   See "Project sync" in the README.
+- `export_workspace.py` — writes the IntelliJ project model to
+  `<root>/workspace.json` (import debugging).
+- `print_classpath.py` — prints the resolved classpath for a class or file
+  (terminal compiles with the project's exact classpath).
 - `test-project/` — minimal Gradle + Java project used by the tests.
 
 ## Running
