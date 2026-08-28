@@ -18,7 +18,7 @@ commit = "94703d5a6bed02b98e438d7cad1136c01a60ba2c"
 
 [grammars.kotlin]
 repository = "https://github.com/fwcd/tree-sitter-kotlin"
-commit = "4e909d6cc9ac96b4eaecb3fb538eaca48e9e9ee9"
+commit = "1852ea17b7f60fb3f9d84e0b1555d56b46b39fb1"
 
 [[capabilities]]
 kind = "download_file"
