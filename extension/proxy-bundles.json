@@ -4,13 +4,19 @@
   "releaseBaseUrl": "https://github.com/SilyNoMeta/zed-intellij-server/releases/download/proxy-v0.1.0",
   "platforms": {
     "darwin-aarch64": {
-      "sha256": "dc0eb07d67ea02f8bc57c88ad030892b9caebd22c126cba43ac11829742ca5e5"
+      "sha256": "e14657375be36dfb95baf9eeb9b80c9a03103ef14c7180343ade15e2c6c1a421"
     },
     "linux-aarch64": {
-      "sha256": "e21354b2a98a56d81ff182f92c999cc7b58a6ce94562efdb8ebf2d1279b5fc5d"
+      "sha256": "ade944a6df934d5c23368880edda2580ddbef71887bfc69920b55ab643f6c3af"
     },
     "linux-x86_64": {
-      "sha256": "64a214fc8425f882dcc98c735d1fc519fb7ac89ffc5541431b2c8f2da7f475fb"
+      "sha256": "9f87de2e0bd461044022410059e3d4ae48661e28bd28a1486fe80a82a9a169e7"
+    },
+    "windows-aarch64": {
+      "sha256": "bda309dbf001f261450adae96e2a68cad816cef766c839376f5330648f3d585f"
+    },
+    "windows-x86_64": {
+      "sha256": "e7d974faeaabf975028880c16d4ff47b132cac60f152233cd76105522ebd06ae"
     }
   }
 }
