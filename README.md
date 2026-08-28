@@ -1,8 +1,9 @@
-# Java and Kotlin by IntelliJ IDEA — for Zed
+# Java & Kotlin (IntelliJ engine) — for Zed
 
 IntelliJ-powered code engine for **Java** and **Kotlin** in [Zed](https://zed.dev/),
 driven by the JetBrains **`intellij-server`** backend (the IntelliJ IDEA engine running
 headless, the same backend as the official VS Code extension).
+Not affiliated with or endorsed by JetBrains.
 
 Diagnostics come from real IntelliJ inspections, completion/navigation/refactorings from
 the IntelliJ project model (Gradle, Maven, Bazel), and debugging from the IntelliJ
