@@ -115,6 +115,53 @@ Classpath (JPMS included), working directory and `java` executable are resolved 
 the IntelliJ project model at launch. **Build your classes before launching** — the
 backend does not compile before running (e.g. `gradle classes`, or a Zed task).
 
+## Project sync (the IntelliJ "Load Changes" button)
+
+In IntelliJ IDEA, editing a build file shows a button to re-sync the project.
+Here you rarely need it: **saving a build descriptor in the editor re-imports
+the project automatically** (`intellij/reloadWorkspace` through the proxy).
+Watched files: `pom.xml`, `build.gradle(.kts)`, `settings.gradle(.kts)`,
+`gradle.properties`, `gradle-wrapper.properties`, `BUILD(.bazel)`,
+`MODULE.bazel`, `WORKSPACE(.bazel)`, `.bazelproject`, `*.bzl`.
+
+For the cases auto-sync misses (edits made outside the editor: git checkout,
+CLI, scripts), trigger a reload manually — the proxy exposes it on its control
+channel, and `tests/reload_workspace.py` wraps it (it locates the right server
+instance from the project root):
+
+```sh
+python3 tests/reload_workspace.py /path/to/your/project
+```
+
+Bind it to a key for a true "sync button", in `.zed/tasks.json`:
+
+```json
+[
+  {
+    "label": "IntelliJ: reload workspace",
+    "command": "python3 /path/to/zed-intellij-server/tests/reload_workspace.py \"$ZED_WORKTREE_ROOT\"",
+    "hide": "never"
+  }
+]
+```
+
+and in `keymap.json`:
+
+```json
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "ctrl-alt-r": ["task::Spawn", { "task_name": "IntelliJ: reload workspace" }]
+    }
+  }
+]
+```
+
+Restarting the language server (Zed's built-in action) also works, but is much
+slower: reload keeps the JVM and the index, restart rebuilds neither but pays
+the full startup.
+
 To debug a JVM started elsewhere (tests, a server, a Gradle run), start it with
 `-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005` and use the
 attach configuration above.

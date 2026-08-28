@@ -451,7 +451,7 @@ fn client_to_server(shared: &Arc<Shared>, body: Vec<u8>) {
             to_server(shared, &body);
             let uri = msg["params"]["textDocument"]["uri"].as_str().unwrap_or("");
             if buildfiles::is_build_file_path(uri) {
-                trigger_reload_workspace(Arc::clone(shared));
+                trigger_reload_workspace(Arc::clone(shared), "build file saved");
             }
         }
         m if NAV_METHODS.contains(&m) => {
@@ -468,7 +468,7 @@ fn client_to_server(shared: &Arc<Shared>, body: Vec<u8>) {
     }
 }
 
-fn trigger_reload_workspace(shared: Arc<Shared>) {
+fn trigger_reload_workspace(shared: Arc<Shared>, reason: &'static str) {
     std::thread::spawn(move || {
         let options = shared.init_options.lock().unwrap().clone();
         let result = call_server(
@@ -479,8 +479,8 @@ fn trigger_reload_workspace(shared: Arc<Shared>) {
         logln(
             &shared,
             &match result {
-                Ok(_) => "workspace reloaded after build file save".to_string(),
-                Err(e) => format!("reloadWorkspace failed: {e}"),
+                Ok(_) => format!("workspace reloaded ({reason})"),
+                Err(e) => format!("reloadWorkspace failed ({reason}): {e}"),
             },
         );
     });

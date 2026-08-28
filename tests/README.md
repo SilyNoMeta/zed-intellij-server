@@ -20,6 +20,9 @@ editor, plus a minimal Gradle project to run them against.
   (EAP, env var, or discovered) is in effect. See "Licensing" in the README.
 - `clear_caches.py` — asks the running proxy to wipe the backend index and
   restart everything. See "Troubleshooting" in the README.
+- `reload_workspace.py` — triggers `intellij/reloadWorkspace` on the server
+  instance of a given project (the manual "Load Changes" button).
+  See "Project sync" in the README.
 - `test-project/` — minimal Gradle + Java project used by the tests.
 
 ## Running

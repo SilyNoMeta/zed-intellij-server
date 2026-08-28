@@ -87,6 +87,13 @@ fn handle_request(shared: &Arc<Shared>, expected_token: &str, line: &str) -> Val
     if command == CLEAR_CACHES_COMMAND {
         return handle_clear_caches(shared, id);
     }
+    if command == RELOAD_WORKSPACE_COMMAND {
+        if shared.init_options.lock().unwrap().is_null() {
+            return json!({"id": id, "error": "server not initialized yet"});
+        }
+        crate::trigger_reload_workspace(Arc::clone(shared), "manual reload");
+        return json!({"id": id, "result": "workspace reload requested"});
+    }
     match call_server(
         shared,
         "workspace/executeCommand",
@@ -101,6 +108,10 @@ fn handle_request(shared: &Arc<Shared>, expected_token: &str, line: &str) -> Val
 /// exited (so its index files are released), the proxy deletes the index and
 /// exits with a crash code so the host restarts everything fresh.
 pub const CLEAR_CACHES_COMMAND: &str = "__clear_caches_and_restart";
+
+/// `__reload_workspace`: re-imports the project model without restarting
+/// the server — the manual equivalent of IntelliJ's "Load Changes" button.
+pub const RELOAD_WORKSPACE_COMMAND: &str = "__reload_workspace";
 
 fn handle_clear_caches(shared: &Arc<Shared>, id: Value) -> Value {
     if shared.index_dir.lock().unwrap().is_none() {

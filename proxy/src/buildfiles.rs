@@ -13,6 +13,9 @@ const BUILD_FILE_NAMES: &[&str] = &[
     "WORKSPACE",
     "WORKSPACE.bazel",
     ".bazelproject",
+    // Beyond the official client's list: these also change the project model.
+    "gradle.properties",
+    "gradle-wrapper.properties",
 ];
 
 pub fn is_build_file_path(path: &str) -> bool {
@@ -30,6 +33,8 @@ mod tests {
         assert!(is_build_file_path("/x/y/build.gradle.kts"));
         assert!(is_build_file_path("/x/MODULE.bazel"));
         assert!(is_build_file_path("/x/tools/defs.bzl"));
+        assert!(is_build_file_path("/x/gradle.properties"));
+        assert!(is_build_file_path("/x/gradle/wrapper/gradle-wrapper.properties"));
         assert!(!is_build_file_path("/x/build.gradle.kts.bak"));
         assert!(!is_build_file_path("/x/build.gradlex"));
         assert!(!is_build_file_path("/x/BUILDING"));
