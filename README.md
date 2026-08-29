@@ -236,6 +236,14 @@ with the EAP terms), three channels:
 
 ## Troubleshooting
 
+**"Failed to install dev extension: failed to compile Rust extension".** Zed's
+builder runs `cargo` with the PATH it inherits. If a Homebrew-installed Rust
+(`brew install rust`) shadows rustup's in your PATH, the build fails with
+`can't find crate for core` — Homebrew Rust has no `wasm32-wasip2` target.
+Fix: `brew uninstall rust` (or put `export PATH="$HOME/.cargo/bin:$PATH"` in
+your `~/.zshrc`), then fully quit and relaunch Zed so it picks up the new
+environment, and retry.
+
 **Clear caches and restart.** When the index gets corrupted (stale or missing
 symbols, odd diagnostics after a crash), ask the running proxy to wipe the
 backend index and restart everything:
