@@ -21,3 +21,4 @@ tests/test-project/.gradle/
 .DS_Store
 tests/test-project/workspace.json
 extension/grammars/
+out/
