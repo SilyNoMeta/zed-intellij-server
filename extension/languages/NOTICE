@@ -21,6 +21,14 @@ License: MIT (text reproduced below)
 Changes: queries and config vendored as-is except config.toml
 (debuggers entry added for this extension).
 
+languages/gradle/
+----------------------------------------------------------------------
+Tree-sitter queries and language configuration adapted from
+https://github.com/zed-extensions/java
+Copyright: Java Extension Contributors
+License: Apache-2.0 (see the LICENSE file at the root of this repository)
+Changes: vendored as-is (Gradle language over the groovy grammar).
+
 ---
 
 MIT License

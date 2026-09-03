@@ -277,6 +277,8 @@ restart the server.
 ## Repository layout
 
 - `extension/` — the Zed extension (Rust → WASM): backend acquisition, EULA gate, DAP wiring.
+  Bundles Java, Kotlin and Gradle (groovy) tree-sitter highlighting: `*.java`, `*.kt`/`*.kts`,
+  and `build.gradle` (detected as *Gradle*).
 - `proxy/` — the native LSP proxy and DAP adapter (`ij-zed-proxy`).
 - `tests/` — protocol-level integration tests (`spike.py`, `dap_test.py`) and a test project.
 - `scripts/` — release tooling: backend bump check, proxy cross-build, extension packaging.
